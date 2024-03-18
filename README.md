@@ -1,0 +1,3 @@
+```bash
+❯ go build && ./chirpy
+```
