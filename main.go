@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/hlpd-pham/chirpy/server"
 )
 
 func main() {
-	server := NewServer()
-	err := server.Start()
+	s := server.NewServer()
+	err := s.Start()
 	if err != nil {
 		fmt.Printf("Error starting server: %s\n", err)
 	}
