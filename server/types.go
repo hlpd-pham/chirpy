@@ -42,6 +42,12 @@ type userResponse struct {
 	Id    int    `json:"id"`
 }
 
+type loginRequestBody struct {
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	ExpiresInSeconds int    `json:"expiresInSeconds"`
+}
+
 type loginResponseBody struct {
 	User  userResponse `json:"user"`
 	Token string       `json:"token"`

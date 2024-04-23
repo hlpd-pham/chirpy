@@ -2,6 +2,13 @@ package server
 
 import "net/http"
 
+func (wrapper *apiWrapper) middlewareMetricsInc(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		wrapper.fileServerHits++
+		next.ServeHTTP(w, r)
+	})
+}
+
 // MiddleWareCORS is a custom middleware that adds CORS headers to the response
 func MiddleWareCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
