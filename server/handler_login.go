@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/hlpd-pham/chirpy/server/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (wrapper *apiWrapper) login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	reqBody := loginRequestBody{}
+	reqBody := userRequest{}
 	err := decoder.Decode(&reqBody)
 	if err != nil {
 		msg := fmt.Sprintf("Error decoding request body: %s", err)
@@ -34,30 +33,25 @@ func (wrapper *apiWrapper) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentTimeUTC := time.Now().UTC()
-	tokenDuration := 900
-	if reqBody.ExpiresInSeconds > 0 {
-		tokenDuration = reqBody.ExpiresInSeconds
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    "chirpy",
-		IssuedAt:  jwt.NewNumericDate(currentTimeUTC),
-		ExpiresAt: jwt.NewNumericDate(currentTimeUTC.Add(time.Duration(tokenDuration) * time.Second)),
-		Subject:   fmt.Sprint(user.Id),
-	})
-	signedToken, err := token.SignedString(wrapper.jwtSecret)
+	accessToken, err := auth.GetSignedToken(auth.CHIRPY_ACCESS_ISSUER, fmt.Sprint(user.Id), wrapper.jwtSecret)
 	if err != nil {
-		msg := fmt.Sprintf("error signing token: %s", err)
+		msg := fmt.Sprintf("error signing access token: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	refreshToken, err := auth.GetSignedToken(auth.CHIRPY_REFRESH_ISSUER, fmt.Sprint(user.Id), wrapper.jwtSecret)
+	if err != nil {
+		msg := fmt.Sprintf("error signing refresh token: %s", err)
 		respondWithError(w, http.StatusServiceUnavailable, msg)
 		return
 	}
 
 	userResponse := loginResponseBody{
-		User: userResponse{
-			Id:    user.Id,
-			Email: user.Email,
-		},
-		Token: signedToken,
+		Id:           user.Id,
+		Email:        user.Email,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	dat, err := json.Marshal(userResponse)

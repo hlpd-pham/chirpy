@@ -22,6 +22,7 @@ type apiWrapper struct {
 	chirps         []chirp
 	users          []user
 	jwtSecret      []byte
+	revokedTokens  map[string]bool
 }
 
 type errorResponse struct {
@@ -42,15 +43,15 @@ type userResponse struct {
 	Id    int    `json:"id"`
 }
 
-type loginRequestBody struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	ExpiresInSeconds int    `json:"expiresInSeconds"`
+type loginResponseBody struct {
+	Email        string `json:"email"`
+	Id           int    `json:"id"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
 }
 
-type loginResponseBody struct {
-	User  userResponse `json:"user"`
-	Token string       `json:"token"`
+type refreshResponseBody struct {
+	Token string `json:"token"`
 }
 
 type createChirpResponse struct {

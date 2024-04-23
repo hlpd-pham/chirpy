@@ -21,6 +21,7 @@ func NewServer() *Server {
 		nextUserId:     1,
 		chirps:         []chirp{},
 		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
+		revokedTokens:  map[string]bool{},
 	}
 
 	mux := http.NewServeMux()
@@ -40,6 +41,8 @@ func NewServer() *Server {
 	mux.HandleFunc("PUT /api/users", wrapper.updateUser)
 
 	mux.HandleFunc("POST /api/login", wrapper.login)
+	mux.HandleFunc("POST /api/refresh", wrapper.refresh)
+	mux.HandleFunc("POST /api/revoke", wrapper.revoke)
 
 	corsMux := MiddleWareCORS(mux)
 
