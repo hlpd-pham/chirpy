@@ -3,6 +3,9 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // Server struct holds the HTTP server and configuration
@@ -17,6 +20,7 @@ func NewServer() *Server {
 		nextChirpId:    1,
 		nextUserId:     1,
 		chirps:         []chirp{},
+		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
 	}
 
 	mux := http.NewServeMux()
@@ -33,15 +37,23 @@ func NewServer() *Server {
 
 	mux.HandleFunc("POST /api/users", wrapper.createUser)
 	mux.HandleFunc("GET /api/users/{id}", wrapper.getOneUser)
+	mux.HandleFunc("PUT /api/users", wrapper.updateUser)
+
+	mux.HandleFunc("POST /api/login", wrapper.login)
 
 	corsMux := MiddleWareCORS(mux)
+
+	// by default, godotenv will look for a file named .env in the current directory
+	godotenv.Load()
 
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: corsMux,
 	}
 
-	return &Server{server: server}
+	return &Server{
+		server: server,
+	}
 }
 
 // Start starts the HTTP server

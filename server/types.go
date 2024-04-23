@@ -10,8 +10,9 @@ type chirp struct {
 }
 
 type user struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
+	Id           int    `json:"id"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"passwordHash"`
 }
 
 type apiWrapper struct {
@@ -20,18 +21,30 @@ type apiWrapper struct {
 	nextUserId     int
 	chirps         []chirp
 	users          []user
+	jwtSecret      []byte
 }
 
 type errorResponse struct {
-	Error error `json:"error"`
+	Message string `json:"message"`
 }
 
 type createChirpRequestBody struct {
 	Body string `json:"body"`
 }
 
-type createUserRequestBody struct {
+type userRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type userResponse struct {
 	Email string `json:"email"`
+	Id    int    `json:"id"`
+}
+
+type loginResponseBody struct {
+	User  userResponse `json:"user"`
+	Token string       `json:"token"`
 }
 
 type createChirpResponse struct {

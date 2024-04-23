@@ -2,13 +2,15 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (wrapper *apiWrapper) metricsHandler(w http.ResponseWriter, r *http.Request) {
@@ -124,25 +126,6 @@ func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
 	w.Write(dat)
 }
 
-func validateChirp(reqBody createChirpRequestBody) ([]string, error) {
-	if len(reqBody.Body) > 140 || len(reqBody.Body) == 0 {
-		msg := fmt.Sprintf("chirp too or empty long, %d in length", len(reqBody.Body))
-		return nil, errors.New(msg)
-	}
-
-	log.Printf("valid message has %d characters", len(reqBody.Body))
-	words := strings.Split(reqBody.Body, " ")
-	for idx, word := range words {
-		for _, badWord := range []string{"kerfuffle", "sharbert", "fornax"} {
-			if word == badWord {
-				words[idx] = "****"
-				break
-			}
-		}
-	}
-	return words, nil
-}
-
 func (wrapper *apiWrapper) getOneUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if len(id) == 0 {
@@ -171,11 +154,17 @@ func (wrapper *apiWrapper) getOneUser(w http.ResponseWriter, r *http.Request) {
 
 func (wrapper *apiWrapper) createUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	reqBody := createUserRequestBody{}
+	reqBody := userRequest{}
 	err := decoder.Decode(&reqBody)
 	if err != nil {
 		msg := fmt.Sprintf("Error decoding request body: %s", err)
 		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	if findUserByEmail(reqBody.Email, wrapper.users) != nil {
+		msg := "email is used"
+		respondWithError(w, http.StatusBadRequest, msg)
 		return
 	}
 
@@ -185,14 +174,27 @@ func (wrapper *apiWrapper) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := user{
-		Id:    wrapper.nextUserId,
-		Email: email,
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), len(reqBody.Password))
+	if err != nil {
+		msg := fmt.Sprintf("Error hashing password: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
 	}
 
-	dat, err := json.Marshal(newUser)
-	msg := fmt.Sprintf("Error marshalling JSON response: %s", err)
+	newUser := user{
+		Id:           wrapper.nextUserId,
+		Email:        email,
+		PasswordHash: string(passwordHash),
+	}
+
+	res := userResponse{
+		Id:    newUser.Id,
+		Email: newUser.Email,
+	}
+
+	dat, err := json.Marshal(res)
 	if err != nil {
+		msg := fmt.Sprintf("Error marshalling JSON response: %s", err)
 		respondWithError(w, http.StatusServiceUnavailable, msg)
 		return
 	}
@@ -205,26 +207,150 @@ func (wrapper *apiWrapper) createUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(dat)
 }
 
-func validateUserEmail(reqBody createUserRequestBody) (string, error) {
-	if len(reqBody.Email) == 0 {
-		return "", errors.New("email is required to create account")
-	}
-	return reqBody.Email, nil
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	log.Println(msg)
-	respBody := errorResponse{
-		Error: errors.New(msg),
-	}
-	dat, err := json.Marshal(respBody)
-	msg = fmt.Sprintf("Error marshalling JSON response: %s", err)
+func (wrapper *apiWrapper) updateUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	reqBody := userRequest{}
+	err := decoder.Decode(&reqBody)
 	if err != nil {
-		log.Println(msg)
+		msg := fmt.Sprintf("Error decoding request body: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
 		return
 	}
 
-	w.WriteHeader(code)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		msg := "Could not find auth header from request"
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+	headerParts := strings.Split(authHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		msg := "Auth header is not formatted correctly"
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	user := findUserByEmail(reqBody.Email, wrapper.users)
+	if user == nil {
+		msg := fmt.Sprintf("Could not find user with email: %s", reqBody.Email)
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	fmt.Printf("headers: %v\n", headerParts[1])
+
+	token, err := jwt.ParseWithClaims(
+		headerParts[1],
+		&jwt.RegisteredClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			return wrapper.jwtSecret, nil
+		},
+	)
+	if err != nil {
+		msg := fmt.Sprintf("Error parsing token: %s", err)
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	if token.Valid {
+		tokenSubject, err := token.Claims.GetSubject()
+		if err != nil {
+			msg := "Error getting token subject"
+			respondWithError(w, http.StatusBadRequest, msg)
+			return
+		}
+		userId, err := strconv.Atoi(tokenSubject)
+		if err != nil {
+			msg := fmt.Sprintf("Error parsing userId from tokenSubject :%s", tokenSubject)
+			respondWithError(w, http.StatusBadRequest, msg)
+			return
+		}
+		if len(reqBody.Password) != 0 {
+			passwordHash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), len(reqBody.Password))
+			if err != nil {
+				msg := fmt.Sprintf("Error hashing password: %s", err)
+				respondWithError(w, http.StatusServiceUnavailable, msg)
+				return
+			}
+			wrapper.users[userId-1].PasswordHash = string(passwordHash)
+		}
+
+		res := userResponse{
+			Id:    user.Id,
+			Email: user.Email,
+		}
+
+		dat, err := json.Marshal(res)
+		if err != nil {
+			msg := fmt.Sprintf("Error marshalling JSON response: %s", err)
+			respondWithError(w, http.StatusServiceUnavailable, msg)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(dat)
+	} else {
+		msg := "Bearer token is invalid"
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+}
+
+func (wrapper *apiWrapper) login(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	reqBody := userRequest{}
+	err := decoder.Decode(&reqBody)
+	if err != nil {
+		msg := fmt.Sprintf("Error decoding request body: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	user := findUserByEmail(reqBody.Email, wrapper.users)
+	if user == nil {
+		msg := fmt.Sprintf("Could not find user with email: %s", reqBody.Email)
+		respondWithError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(reqBody.Password))
+	if err != nil {
+		msg := "Incorrect password"
+		respondWithError(w, http.StatusUnauthorized, msg)
+		return
+	}
+
+	currentTimeUTC := time.Now().UTC()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    "chirpy",
+		IssuedAt:  jwt.NewNumericDate(currentTimeUTC),
+		ExpiresAt: jwt.NewNumericDate(currentTimeUTC.Add(900 * time.Second)),
+		Subject:   fmt.Sprint(user.Id),
+	})
+	signedToken, err := token.SignedString(wrapper.jwtSecret)
+	if err != nil {
+		msg := fmt.Sprintf("error signing token: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	userResponse := loginResponseBody{
+		User: userResponse{
+			Id:    user.Id,
+			Email: user.Email,
+		},
+		Token: signedToken,
+	}
+
+	dat, err := json.Marshal(userResponse)
+	if err != nil {
+		msg := fmt.Sprintf("Error marshalling JSON response: %s", err)
+		respondWithError(w, http.StatusServiceUnavailable, msg)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(dat)
 }
