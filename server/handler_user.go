@@ -103,8 +103,7 @@ func (wrapper *apiWrapper) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	_, err = auth.GetToken(r, wrapper.jwtSecret, auth.CHIRPY_ACCESS_ISSUER)
 	if err != nil {
-		msg := fmt.Sprintf("error parsing access token: %s", err)
-		respondWithError(w, http.StatusBadRequest, msg)
+		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 

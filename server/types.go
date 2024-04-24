@@ -5,8 +5,9 @@ type metricsData struct {
 }
 
 type chirp struct {
-	Id   int    `json:"id"`
-	Body string `json:"body"`
+	Id       int    `json:"id"`
+	Body     string `json:"body"`
+	AuthorId int    `json:"authorId"`
 }
 
 type user struct {
@@ -33,6 +34,10 @@ type createChirpRequestBody struct {
 	Body string `json:"body"`
 }
 
+type getAllChirpsResponse struct {
+	Body []chirp `json:"body"`
+}
+
 type userRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -52,13 +57,4 @@ type loginResponseBody struct {
 
 type refreshResponseBody struct {
 	Token string `json:"token"`
-}
-
-type createChirpResponse struct {
-	Body string `json:"body"`
-	Id   int    `json:"id"`
-}
-
-type getAllChirpsResponse struct {
-	Body []chirp `json:"body"`
 }

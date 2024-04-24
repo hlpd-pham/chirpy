@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/hlpd-pham/chirpy/server/auth"
 )
 
 func (wrapper *apiWrapper) getAllChirps(w http.ResponseWriter, _ *http.Request) {
@@ -61,15 +63,34 @@ func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := auth.GetToken(r, wrapper.jwtSecret, auth.CHIRPY_ACCESS_ISSUER)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
 	words, err := validateChirp(reqBody)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respBody := createChirpResponse{
-		Body: strings.Join(words, " "),
-		Id:   wrapper.nextChirpId,
+	tokenSubject, err := token.Claims.GetSubject()
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userId, err := strconv.Atoi(tokenSubject)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respBody := chirp{
+		Body:     strings.Join(words, " "),
+		Id:       wrapper.nextChirpId,
+		AuthorId: userId,
 	}
 
 	dat, err := json.Marshal(respBody)
@@ -79,7 +100,10 @@ func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wrapper.chirps = append(wrapper.chirps, chirp{Id: wrapper.nextChirpId, Body: respBody.Body})
+	wrapper.chirps = append(wrapper.chirps, chirp{
+		Id:   wrapper.nextChirpId,
+		Body: respBody.Body,
+	})
 	wrapper.nextChirpId++
 
 	w.WriteHeader(http.StatusCreated)
