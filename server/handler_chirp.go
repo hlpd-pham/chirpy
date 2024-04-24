@@ -39,6 +39,10 @@ func (wrapper *apiWrapper) getOneChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chirpId, err := strconv.Atoi(id)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
 	if _, ok := wrapper.chirps[chirpId]; !ok {
 		respondWithError(w, http.StatusNotFound, fmt.Sprintf("chirp ID: %d is invalid", chirpId))
 		return
@@ -57,6 +61,52 @@ func (wrapper *apiWrapper) getOneChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wrapper *apiWrapper) deleteOneChirp(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if len(id) == 0 {
+		respondWithError(w, http.StatusNotFound, "chirp ID is required to delete")
+		return
+	}
+
+	token, err := auth.GetToken(r, wrapper.jwtSecret, auth.CHIRPY_ACCESS_ISSUER)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	chirpId, err := strconv.Atoi(id)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userIdToken, err := token.Claims.GetSubject()
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userId, err := strconv.Atoi(userIdToken)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	chirp, ok := wrapper.chirps[chirpId]
+	if !ok {
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("chirp ID: %d is invalid", chirpId))
+		return
+	}
+
+	if userId != chirp.AuthorId {
+		fmt.Printf("userId: %d, AuthorId: %d\n", userId, chirp.AuthorId)
+		respondWithError(w, http.StatusForbidden, "don't delete people's chirps, that's not nice")
+		return
+	}
+
+	delete(wrapper.chirps, chirpId)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
 }
 
 func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +156,7 @@ func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wrapper.chirps[wrapper.nextChirpId] = chirp{
-		Id:   wrapper.nextChirpId,
-		Body: respBody.Body,
-	}
+	wrapper.chirps[wrapper.nextChirpId] = respBody
 	wrapper.nextChirpId++
 
 	w.WriteHeader(http.StatusCreated)

@@ -36,6 +36,7 @@ func NewServer() *Server {
 	mux.HandleFunc("POST /api/chirps", wrapper.createChirp)
 	mux.HandleFunc("GET /api/chirps", wrapper.getAllChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", wrapper.getOneChirp)
+	mux.HandleFunc("DELETE /api/chirps/{id}", wrapper.deleteOneChirp)
 
 	mux.HandleFunc("POST /api/users", wrapper.createUser)
 	mux.HandleFunc("GET /api/users/{id}", wrapper.getOneUser)
