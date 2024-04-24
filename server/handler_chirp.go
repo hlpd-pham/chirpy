@@ -11,8 +11,12 @@ import (
 )
 
 func (wrapper *apiWrapper) getAllChirps(w http.ResponseWriter, _ *http.Request) {
+	var chirps []chirp
+	for _, value := range wrapper.chirps {
+		chirps = append(chirps, value)
+	}
 	respBody := getAllChirpsResponse{
-		Body: wrapper.chirps,
+		Body: chirps,
 	}
 
 	dat, err := json.Marshal(respBody)
@@ -35,13 +39,12 @@ func (wrapper *apiWrapper) getOneChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chirpId, err := strconv.Atoi(id)
-	if err != nil || chirpId < 0 || chirpId > len(wrapper.chirps) {
-		msg := fmt.Sprintf("chirp ID: %s is invalid, err: %v", id, err)
-		respondWithError(w, http.StatusBadRequest, msg)
+	if _, ok := wrapper.chirps[chirpId]; !ok {
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("chirp ID: %d is invalid", chirpId))
 		return
 	}
 
-	dat, err := json.Marshal(wrapper.chirps[chirpId-1])
+	dat, err := json.Marshal(wrapper.chirps[chirpId])
 	msg := fmt.Sprintf("Error marshalling JSON response: %s", err)
 	if err != nil {
 		respondWithError(w, http.StatusServiceUnavailable, msg)
@@ -51,6 +54,9 @@ func (wrapper *apiWrapper) getOneChirp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(dat)
+}
+
+func (wrapper *apiWrapper) deleteOneChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
@@ -100,10 +106,10 @@ func (wrapper *apiWrapper) createChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wrapper.chirps = append(wrapper.chirps, chirp{
+	wrapper.chirps[wrapper.nextChirpId] = chirp{
 		Id:   wrapper.nextChirpId,
 		Body: respBody.Body,
-	})
+	}
 	wrapper.nextChirpId++
 
 	w.WriteHeader(http.StatusCreated)

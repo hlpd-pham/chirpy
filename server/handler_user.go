@@ -83,8 +83,8 @@ func (wrapper *apiWrapper) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	wrapper.users[wrapper.nextUserId] = newUser
 	wrapper.nextUserId++
-	wrapper.users = append(wrapper.users, newUser)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")
@@ -121,7 +121,7 @@ func (wrapper *apiWrapper) updateUser(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusServiceUnavailable, msg)
 			return
 		}
-		wrapper.users[user.Id-1].PasswordHash = string(passwordHash)
+		user.PasswordHash = string(passwordHash)
 	}
 
 	res := userResponse{

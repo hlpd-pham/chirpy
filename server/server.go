@@ -19,7 +19,8 @@ func NewServer() *Server {
 		fileServerHits: 0,
 		nextChirpId:    1,
 		nextUserId:     1,
-		chirps:         []chirp{},
+		chirps:         map[int]chirp{},
+		users:          map[int]user{},
 		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
 		revokedTokens:  map[string]bool{},
 	}

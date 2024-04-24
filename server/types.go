@@ -20,8 +20,8 @@ type apiWrapper struct {
 	fileServerHits int
 	nextChirpId    int
 	nextUserId     int
-	chirps         []chirp
-	users          []user
+	chirps         map[int]chirp
+	users          map[int]user
 	jwtSecret      []byte
 	revokedTokens  map[string]bool
 }

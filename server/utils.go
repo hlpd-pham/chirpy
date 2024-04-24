@@ -52,7 +52,7 @@ func validateChirp(reqBody createChirpRequestBody) ([]string, error) {
 	return words, nil
 }
 
-func findUserByEmail(email string, users []user) *user {
+func findUserByEmail(email string, users map[int]user) *user {
 	for _, user := range users {
 		if user.Email == email {
 			return &user
