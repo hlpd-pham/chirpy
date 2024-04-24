@@ -14,6 +14,7 @@ type user struct {
 	Id           int    `json:"id"`
 	Email        string `json:"email"`
 	PasswordHash string `json:"passwordHash"`
+	IsChirpyRed  bool   `json:"isChirpyRed"`
 }
 
 type apiWrapper struct {
@@ -23,6 +24,7 @@ type apiWrapper struct {
 	chirps         map[int]chirp
 	users          map[int]user
 	jwtSecret      []byte
+	polkaKey       []byte
 	revokedTokens  map[string]bool
 }
 
@@ -57,4 +59,11 @@ type loginResponseBody struct {
 
 type refreshResponseBody struct {
 	Token string `json:"token"`
+}
+
+type polkaRequestBody struct {
+	Event string `json:"event"`
+	Data  struct {
+		UserId int `json:"user_id"`
+	} `json:"data"`
 }

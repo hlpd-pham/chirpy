@@ -15,6 +15,9 @@ type Server struct {
 
 // NewServer creates a new instance of Server with default settings
 func NewServer() *Server {
+	// by default, godotenv will look for a file named .env in the current directory
+	godotenv.Load()
+
 	wrapper := apiWrapper{
 		fileServerHits: 0,
 		nextChirpId:    1,
@@ -22,6 +25,7 @@ func NewServer() *Server {
 		chirps:         map[int]chirp{},
 		users:          map[int]user{},
 		jwtSecret:      []byte(os.Getenv("JWT_SECRET")),
+		polkaKey:       []byte(os.Getenv("POLKA_KEY")),
 		revokedTokens:  map[string]bool{},
 	}
 
@@ -46,10 +50,9 @@ func NewServer() *Server {
 	mux.HandleFunc("POST /api/refresh", wrapper.refresh)
 	mux.HandleFunc("POST /api/revoke", wrapper.revoke)
 
-	corsMux := MiddleWareCORS(mux)
+	mux.HandleFunc("POST /api/polka/webhooks", wrapper.polka)
 
-	// by default, godotenv will look for a file named .env in the current directory
-	godotenv.Load()
+	corsMux := MiddleWareCORS(mux)
 
 	server := &http.Server{
 		Addr:    ":8080",

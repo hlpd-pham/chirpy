@@ -98,7 +98,6 @@ func (wrapper *apiWrapper) deleteOneChirp(w http.ResponseWriter, r *http.Request
 	}
 
 	if userId != chirp.AuthorId {
-		fmt.Printf("userId: %d, AuthorId: %d\n", userId, chirp.AuthorId)
 		respondWithError(w, http.StatusForbidden, "don't delete people's chirps, that's not nice")
 		return
 	}

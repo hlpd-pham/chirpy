@@ -18,13 +18,17 @@ func (wrapper *apiWrapper) getOneUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId, err := strconv.Atoi(id)
-	if err != nil || userId < 0 || userId > len(wrapper.chirps) {
-		msg := fmt.Sprintf("user ID: %s is invalid, err: %v", id, err)
-		respondWithError(w, http.StatusBadRequest, msg)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	dat, err := json.Marshal(wrapper.users[userId-1])
+	user, ok := wrapper.users[userId]
+	if !ok {
+		respondWithError(w, http.StatusNotFound, "user not found")
+	}
+
+	dat, err := json.Marshal(user)
 	msg := fmt.Sprintf("error marshalling JSON response: %s", err)
 	if err != nil {
 		respondWithError(w, http.StatusServiceUnavailable, msg)
@@ -69,6 +73,7 @@ func (wrapper *apiWrapper) createUser(w http.ResponseWriter, r *http.Request) {
 		Id:           wrapper.nextUserId,
 		Email:        email,
 		PasswordHash: string(passwordHash),
+		IsChirpyRed:  false,
 	}
 
 	res := userResponse{

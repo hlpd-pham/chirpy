@@ -40,6 +40,21 @@ func GetSignedToken(issuer, subject string, signKey []byte) (string, error) {
 	return signedToken, nil
 }
 
+func ValidatePolkaKey(r *http.Request, secret []byte) error {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return fmt.Errorf("could not find auth header from request")
+	}
+	headerParts := strings.Split(authHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "ApiKey" {
+		return fmt.Errorf("auth header is not formatted correctly")
+	}
+	if headerParts[1] != string(secret) {
+		return fmt.Errorf("invalid ApiKey")
+	}
+	return nil
+}
+
 func GetToken(r *http.Request, signKey []byte, tokenType string) (*jwt.Token, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
