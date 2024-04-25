@@ -1,0 +1,303 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "golang-server",
+    "collectionId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+    "dateExported": "2024-04-25T15:37:34.731Z",
+    "version": "1.2",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "003d1bba-8192-40d7-9a4c-301999c98bd3",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "healthz",
+            "url": "http://localhost:8080/api/healthz",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-04-22T15:58:11.495Z",
+            "modified": "2024-04-22T15:58:24.548Z",
+            "headers": []
+        },
+        {
+            "_id": "12ae43a9-4e97-45d9-8a12-2a9f9281fd17",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "CreateUser",
+            "url": "http://localhost:8080/api/users",
+            "method": "POST",
+            "sortNum": 25000,
+            "created": "2024-04-22T16:00:39.903Z",
+            "modified": "2024-04-22T16:01:35.324Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"test@email.com\",\n  \"password\": \"hellothere\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "e73688f8-3537-4c8a-9ee8-75f6f6cfc616",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "login good",
+            "url": "http://localhost:8080/api/login",
+            "method": "POST",
+            "sortNum": 32500,
+            "created": "2024-04-22T17:44:51.601Z",
+            "modified": "2024-04-24T01:53:10.186Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"test@email.com\",\n  \"password\": \"hellothere\"\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "set-env-var",
+                    "custom": "json.token",
+                    "action": "setto",
+                    "value": "{{Chirpy.accessToken}}"
+                }
+            ]
+        },
+        {
+            "_id": "c285ce4a-46d2-4cbc-af11-b9c2f2020731",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "upgrade user - webhook",
+            "url": "http://localhost:8080/api/polka/webhooks",
+            "method": "POST",
+            "sortNum": 36250,
+            "created": "2024-04-24T10:50:51.896Z",
+            "modified": "2024-04-24T11:16:47.970Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"data\": {\n    \"user_id\": 1\n  },\n  \"event\": \"user.upgraded\"\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{Chirpy.polkaKey}}",
+                "bearerPrefix": "ApiKey"
+            }
+        },
+        {
+            "_id": "b66fd9c0-d85b-4ca8-bca9-a9311e65dfc1",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "upgrade user - webhook bad",
+            "url": "http://localhost:8080/api/polka/webhooks",
+            "method": "POST",
+            "sortNum": 38125,
+            "created": "2024-04-24T11:08:19.041Z",
+            "modified": "2024-04-24T11:08:19.041Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"data\": {\n    \"user_id\": 1\n  },\n  \"event\": \"user.upgraded\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "c3fcdd0e-f021-4a12-9aff-d08e69ba3b04",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "CreateChirp",
+            "url": "http://localhost:8080/api/chirps",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-04-22T15:59:36.664Z",
+            "modified": "2024-04-24T01:54:28.108Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\"body\": \"this is a message\"}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{Chirpy.accessToken}}"
+            }
+        },
+        {
+            "_id": "c60f5971-f5d0-4e2e-8ed2-32a58e087189",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "CreateChirp no token",
+            "url": "http://localhost:8080/api/chirps",
+            "method": "POST",
+            "sortNum": 42500,
+            "created": "2024-04-24T02:19:30.928Z",
+            "modified": "2024-04-24T02:19:41.251Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\"body\": \"this is a message\"}",
+                "form": []
+            }
+        },
+        {
+            "_id": "57a48323-c9e6-4c47-872f-3f13f55b4daf",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "DeleteChirp",
+            "url": "http://localhost:8080/api/chirps/1",
+            "method": "DELETE",
+            "sortNum": 43125,
+            "created": "2024-04-24T02:37:39.057Z",
+            "modified": "2024-04-24T02:37:53.621Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{Chirpy.accessToken}}"
+            }
+        },
+        {
+            "_id": "32b7ae26-8559-4a8a-8ee8-ca584a610f9e",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "DeleteChirp no auth",
+            "url": "http://localhost:8080/api/chirps/1",
+            "method": "DELETE",
+            "sortNum": 43750,
+            "created": "2024-04-24T02:36:05.893Z",
+            "modified": "2024-04-24T02:36:26.275Z",
+            "headers": []
+        },
+        {
+            "_id": "cd259f37-3cf0-487d-b178-87cd3a5f287d",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "GetOneChirp",
+            "url": "http://localhost:8080/api/chirps/1",
+            "method": "GET",
+            "sortNum": 45000,
+            "created": "2024-04-24T02:15:26.152Z",
+            "modified": "2024-04-24T02:20:48.104Z",
+            "headers": []
+        },
+        {
+            "_id": "8791f203-35c8-49a4-b7e9-c5004ff42546",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "GetChirps",
+            "url": "http://localhost:8080/api/chirps",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2024-04-22T16:00:21.100Z",
+            "modified": "2024-04-22T16:00:26.547Z",
+            "headers": []
+        },
+        {
+            "_id": "930eb454-6ff4-4da1-940e-6e6ef5e6e221",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "getOneUser",
+            "url": "http://localhost:8080/api/users/1",
+            "method": "GET",
+            "sortNum": 52500,
+            "created": "2024-04-24T10:53:05.612Z",
+            "modified": "2024-04-24T10:53:23.065Z",
+            "headers": []
+        },
+        {
+            "_id": "43a4c25e-5abb-4cc7-922b-3ee0092bc444",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "update user",
+            "url": "http://localhost:8080/api/users",
+            "method": "PUT",
+            "sortNum": 55000,
+            "created": "2024-04-22T22:26:13.054Z",
+            "modified": "2024-04-24T01:54:17.047Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"test@email.com\",\n  \"password\": \"lalalalalala\"\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{Chirpy.accessToken}}"
+            }
+        },
+        {
+            "_id": "046deaca-641b-4c59-99d9-64b352b14bbf",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "login good after update PW",
+            "url": "http://localhost:8080/api/login",
+            "method": "POST",
+            "sortNum": 72500,
+            "created": "2024-04-23T21:55:01.392Z",
+            "modified": "2024-04-23T21:55:22.931Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"test@email.com\",\n  \"password\": \"lalalalalala\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "3f08e5c0-6667-46e6-98c6-284504eb401b",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "login bad",
+            "url": "http://localhost:8080/api/login",
+            "method": "POST",
+            "sortNum": 73750,
+            "created": "2024-04-22T17:45:11.741Z",
+            "modified": "2024-04-23T20:54:45.072Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"test@email.com\",\n  \"password\": \"654321\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "17b01d71-e5e5-4fde-b02a-e2d4afd8bc1a",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "revoke",
+            "url": "http://localhost:8080/api/revoke",
+            "method": "POST",
+            "sortNum": 75000,
+            "created": "2024-04-23T21:49:39.647Z",
+            "modified": "2024-04-23T21:51:05.850Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaGlycHktcmVmcmVzaCIsInN1YiI6IjIiLCJleHAiOjE3MTkwOTI5NTQsImlhdCI6MTcxMzkwODk1NH0.cjj8MwQTlKD2DKCwYRRjZeg--NkOcUeg3A9KHJt4E1k"
+            }
+        },
+        {
+            "_id": "d709b015-00b6-4056-89bb-ebf60a4069a1",
+            "colId": "c4937ca4-6547-4a90-b881-c5f0677b6307",
+            "containerId": "",
+            "name": "refresh",
+            "url": "http://localhost:8080/api/refresh",
+            "method": "POST",
+            "sortNum": 77500,
+            "created": "2024-04-23T21:51:32.697Z",
+            "modified": "2024-04-23T21:54:43.193Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaGlycHktcmVmcmVzaCIsInN1YiI6IjEiLCJleHAiOjE3MTkwOTMyMjUsImlhdCI6MTcxMzkwOTIyNX0.obKGUwxqOQVmugXbhC9wr845-bhWcZWe32byI_Ie0eI"
+            }
+        }
+    ],
+    "ref": "Cva536cQL-Y72DTJ9N9MnP0BI_yreZO8Wew1ZsZUGXp0O7Fu3kyTYCAjAZxh4PmmuR8b1P54x3AoVzMIQ4xqyQ"
+}
